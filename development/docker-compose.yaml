@@ -1,0 +1,63 @@
+services:
+  traefik:
+    image: traefik:v3.6
+    command:
+      - "--api.insecure=true"
+      - "--entrypoints.traefik.address=:8081"  # dashboard
+      - "--entrypoints.web.address=:8080"  # http traffic
+
+      - "--log.level=INFO"
+      - "--experimental.otlpLogs=true"
+      - "--log.otlp.grpc.endpoint=localhost:4317"
+      - "--log.otlp.grpc.insecure=true"
+
+      - "--metrics.otlp.grpc.endpoint=localhost:4317"
+      - "--metrics.otlp.grpc.insecure=true"
+
+      - "--tracing.otlp.grpc.endpoint=localhost:4317"
+      - "--tracing.otlp.grpc.insecure=true"
+    network_mode: host
+    #    networks:
+    #      otel-demo:
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:latest
+    container_name: otel-collector
+    command:
+      - "--config=/etc/otel-collector-config.yaml"
+    network_mode: host
+    #    networks:
+    #      otel-demo:
+    ports:
+      - "4317:4317"
+    volumes:
+      - ./config/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+
+  mimir:
+    image: grafana/mimir:latest
+    container_name: mimir
+    command: [ "-config.file=/mimir/config/mimir.yaml" ]
+    network_mode: host
+    #    networks:
+    #      otel-demo:
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./config/mimir.yaml:/mimir/config/mimir.yaml:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    network_mode: host
+    #    networks:
+    #      otel-demo:
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro

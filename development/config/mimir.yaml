@@ -1,0 +1,14 @@
+multitenancy_enabled: false
+
+server:
+  log_level: info
+  http_listen_port: 9000
+  grpc_listen_port: 9001
+
+ingester:
+  ring:
+    replication_factor: 1  # minimize resource usage
+
+limits:
+  # https://grafana.com/docs/mimir/latest/configure/configure-experimental-promql-functions/
+  enabled_promql_experimental_functions: info

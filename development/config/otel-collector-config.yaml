@@ -1,0 +1,35 @@
+---
+extensions:
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+exporters:
+  debug:
+    verbosity: detailed
+
+  otlphttp/mimir-monolithic-mode-local:
+    endpoint: http://127.0.0.1:9000/otlp
+  otlphttp/mimir-monolithic-mode-docker-compose:
+    endpoint: http://mimir:9000/otlp
+
+service:
+  telemetry:
+    metrics:
+      # disable metrics export from collector self-instrumentation
+      # tends to collide with other ports when running on host network
+      # https://github.com/open-telemetry/opentelemetry-collector/discussions/6547
+      level: none
+  pipelines:
+    metrics:
+      receivers: [ otlp ]
+      exporters: [ debug, otlphttp/mimir-monolithic-mode-local ]
+    traces:
+      receivers: [ otlp ]
+      exporters: [ debug ]
+    logs:
+      receivers: [ otlp ]
+      exporters: [ debug ]
